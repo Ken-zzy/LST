@@ -1,0 +1,17 @@
+# Node modules (very large and unnecessary)
+node_modules/
+
+# Env files (secrets)
+.env
+.vscode
+.qodo
+# Build output
+dist/
+index.html
+# System junk
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
