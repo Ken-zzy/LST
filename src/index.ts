@@ -17,7 +17,7 @@ console.log('ENCRYPTION_KEY:', process.env.ENCRYPTION_KEY ? '****** (loaded)' : 
 console.log('MONGODB_URI:', process.env.MONGODB_URI ? '****** (loaded)' : 'NOT LOADED');
 console.log('----------------------------------');
 const app = express();
-const port = 4000;
+const PORT = process.env.PORT || 4000;
 
 app.use(cors());
 
@@ -33,9 +33,9 @@ if (!MONGODB_URI) {
 mongoose.connect(MONGODB_URI) // This is where Mongoose connects
   .then(() => {
     console.log('Connected to MongoDB Atlas!');
-    app.listen(port, () => {
-      console.log(`Server listening at http://localhost:${port}`);
-    });
+    app.listen(PORT, () => {
+  console.log(`Server listening at http://localhost:${PORT}`); // This log will now show the correct port
+});
   })
   .catch((error) => {
     console.error('MongoDB connection error:', error);
