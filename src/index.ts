@@ -41,6 +41,9 @@ mongoose.connect(MONGODB_URI) // This is where Mongoose connects
     console.error('MongoDB connection error:', error);
     process.exit(1);
   });
+app.get('/', (req, res) => {
+    res.status(200).json({ message: "Welcome to the Finable!!! We've saved the world😁" });
+});
 
 app.use('/', accountsRouter); 
 app.use('/auth', authRouter);
