@@ -37,11 +37,12 @@ export function encrypt(text: string): { iv: string; encryptedData: string; auth
   // Get the "tamper-proof seal" (authentication tag)
   const authTag = cipher.getAuthTag();
 
-  return {
+  return   {
     iv: iv.toString('hex'), // Store the sparkle as hex string
     encryptedData: encrypted, // Store the locked data as hex string
     authTag: authTag.toString('hex') // Store the seal as hex string
   };
+  // return encrypt;
 }
 
 // Function to decrypt (open the lockbox)

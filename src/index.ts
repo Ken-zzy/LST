@@ -3,6 +3,7 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import accountsRouter from './routes/accounts';
 import authRouter from './routes/auth';
+import utilityRouter from './routes/utility';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import cors from 'cors';
@@ -41,5 +42,6 @@ mongoose.connect(MONGODB_URI) // This is where Mongoose connects
     process.exit(1);
   });
 
-app.use('/', accountsRouter); // Mount the accounts router
+app.use('/', accountsRouter); 
 app.use('/auth', authRouter);
+app.use('/utility', utilityRouter);

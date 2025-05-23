@@ -10,7 +10,78 @@ import { hashPassword } from '../utils/passwordService';
 // In a real application, you would interact with a database here
 // const accounts: Account[] = [];
 
-export const createAccount = async (req: Request, res: Response) => {
+export const getAllAccounts = async (req: Request, res: Response) => {
+  try {
+    const accounts = await IAccountDocument.find({});
+
+    const responseAccounts = await Promise.all(accounts.map(async account => {
+      // Derive fullName
+      const fullName = `${account.firstName} ${account.surname}`;
+
+      // Initialize decrypted variables, handle potential missing fields gracefully
+      let decryptedPhoneNumber: string | null = null;
+      let decryptedDateOfBirth: string | null = null;
+      let decryptedCardNumber: string | null = null;
+      let decryptedCvv: string | null = null;
+      let decryptedExpiryDate: string | null = null;
+
+      // Decrypt sensitive fields ONLY if they exist on the account object and are valid EncryptedData structure
+      if (account.phoneNumber && account.phoneNumber.iv && account.phoneNumber.encryptedData && account.phoneNumber.authTag) {
+        decryptedPhoneNumber = await decrypt(account.phoneNumber);
+      }
+      if (account.dateOfBirth && account.dateOfBirth.iv && account.dateOfBirth.encryptedData && account.dateOfBirth.authTag) {
+        decryptedDateOfBirth = await decrypt(account.dateOfBirth);
+      }
+      // Add checks for card number, cvv, expiry date
+      if (account.cardNumber && account.cardNumber.iv && account.cardNumber.encryptedData && account.cardNumber.authTag) {
+        decryptedCardNumber = await decrypt(account.cardNumber);
+      }
+      if (account.cvv && account.cvv.iv && account.cvv.encryptedData && account.cvv.authTag) {
+        decryptedCvv = await decrypt(account.cvv);
+      }
+      if (account.expiryDate && account.expiryDate.iv && account.expiryDate.encryptedData && account.expiryDate.authTag) {
+        decryptedExpiryDate = await decrypt(account.expiryDate);
+      }
+
+      return {
+        _id: account._id,
+        accountNumber: account.accountNumber,
+        fullName: fullName, // Added full name
+        email: account.email,
+        createdAt: account.createdAt,
+        // Sensitive fields: showing both encrypted and decrypted versions
+        // Include the fields only if they exist on the account object
+        phoneNumber: account.phoneNumber ? {
+          encrypted: account.phoneNumber,
+          decrypted: decryptedPhoneNumber,
+        } : null,
+        dateOfBirth: account.dateOfBirth ? {
+          encrypted: account.dateOfBirth,
+          decrypted: decryptedDateOfBirth,
+        } : null,
+        cardNumber: account.cardNumber ? { // <-- Ensure this is included
+          encrypted: account.cardNumber,
+          decrypted: decryptedCardNumber,
+        } : null,
+        cvv: account.cvv ? { // <-- Ensure this is included
+          encrypted: account.cvv,
+          decrypted: decryptedCvv,
+        } : null,
+        expiryDate: account.expiryDate ? { // <-- Ensure this is included
+          encrypted: account.expiryDate,
+          decrypted: decryptedExpiryDate,
+        } : null,
+      };
+    }));
+    res.status(200).json(responseAccounts);
+  } catch (error: unknown) {
+    console.error('Error fetching all accounts (Trial of the Ledger):', error);
+    if (error instanceof Error) {
+      return res.status(500).json({ error: `Failed to fetch accounts: ${error.message}` });
+    }
+    res.status(500).json({ error: 'An unknown error occurred while fetching accounts.' });
+  }
+};export const createAccount = async (req: Request, res: Response) => {
   const { firstName, surname, email, phoneNumber, dateOfBirth, password } = req.body;
 
   if (!firstName || !surname || !email || !phoneNumber || !dateOfBirth || !req.body.password) {
@@ -74,34 +145,5 @@ export const createAccount = async (req: Request, res: Response) => {
     console.error('Error creating account:', error);
     res.status(500).json({ error: 'Failed to create account.' });
   }
-};
-
-export const getAllAccounts = async (req: Request, res: Response) => {
-  try {
-    // Find all documents in the 'accounts' collection
-    const accounts = await IAccountDocument.find({});
-
-    // Map the accounts to a cleaner format for the response.
-    // We'll include basic info and the encrypted blobs.
-    // We do NOT decrypt sensitive data here for a "get all" list.
-    const responseAccounts = accounts.map(account => ({
-      _id: account._id, // MongoDB's unique ID for the document
-      accountNumber: account.accountNumber,
-      firstName: account.firstName,
-      surname: account.surname,
-      email: account.email,
-      // We explicitly DO NOT include passwordHash in the response
-      phoneNumber: account.phoneNumber, // This will be the encrypted object
-      dateOfBirth: account.dateOfBirth, // This will be the encrypted object
-      createdAt: account.createdAt,
-    }));
-
-    res.status(200).json(responseAccounts);
-  } catch (error: unknown) {
-    console.error('Error fetching all accounts:', error);
-    if (error instanceof Error) {
-      return res.status(500).json({ error: `Failed to fetch accounts: ${error.message}` });
-    }
-    res.status(500).json({ error: 'An unknown error occurred while fetching accounts.' });
-  }
+  
 };
