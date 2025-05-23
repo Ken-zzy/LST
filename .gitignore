@@ -6,7 +6,7 @@ node_modules/
 .vscode
 .qodo
 # Build output
-dist/
+
 index.html
 # System junk
 .DS_Store
